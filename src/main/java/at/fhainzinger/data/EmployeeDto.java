@@ -1,24 +1,18 @@
 package at.fhainzinger.data;
 
+import at.fhainzinger.services.LocationIQDataService;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Data
 public class EmployeeDto {
-    private String name;
-    private String password;
-    private String longitude;
-    private String latitude;
+    @Autowired
+    private LocationIQDataService locationIQDataService;
 
-    public Employee convertToEmployee(){
-        Employee result = new Employee();
-        result.setId(-1);
-        result.setName(name);
-        result.setPassword(password);
-        result.setLongitude(longitude);
-        result.setLatitude(latitude);
-        return result;
-    }
+    private String name;
+    private String address;
+    private String password;
 }

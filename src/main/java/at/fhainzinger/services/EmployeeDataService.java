@@ -5,39 +5,19 @@ import at.fhainzinger.database.EmployeeRepository;
 import at.fhainzinger.exceptions.employees.EmployeeMSBadRequestException;
 import at.fhainzinger.exceptions.employees.EmployeeMSResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+@Component
 public class EmployeeDataService {
     @Autowired
     private EmployeeRepository employeeRepository;
 
     @Autowired
-    private ServiceDataService serviceDataService;
-
-    public void createInitials(){
-        if(employeeRepository.count() == 0){
-            Employee emp1 = new Employee();
-            emp1.setId(1);
-            emp1.setName("Employee 1");
-            emp1.setPassword("password");
-            emp1.setLongitude("45.24565");
-            emp1.setLatitude("45.67369");
-
-            employeeRepository.save(emp1.convertToEmployeeEntity());
-
-            Employee emp2 = new Employee();
-            emp2.setId(1);
-            emp2.setName("Employee 2");
-            emp2.setPassword("password");
-            emp2.setLongitude("48.245625");
-            emp2.setLatitude("41.67369");
-
-            employeeRepository.save(emp2.convertToEmployeeEntity());
-        }
-    }
+    private LocationIQDataService locationIQDataService;
 
     public List<EmployeeResource> getEmployeeResources() {
         List<EmployeeResource> result = new ArrayList<>();
@@ -49,7 +29,16 @@ public class EmployeeDataService {
 
     public EmployeeResource addEmployee(EmployeeDto employeeDto) {
         checkDto(employeeDto);
-        EmployeeEntity storedEntity = employeeRepository.save(employeeDto.convertToEmployee().convertToEmployeeEntity());
+
+        Employee employee = new Employee();
+        employee.setId(-1);
+        employee.setName(employeeDto.getName());
+        LongitudeLatitude longitudeLatitude = locationIQDataService.getLongitudeLatitudeByAddress(employeeDto.getAddress());
+        employee.setLatitude(longitudeLatitude.getLatitude());
+        employee.setLongitude(longitudeLatitude.getLongitude());
+        employee.setPassword(employeeDto.getPassword());
+
+        EmployeeEntity storedEntity = employeeRepository.save(employee.convertToEmployeeEntity());
 
         return storedEntity.convertToEmployee().convertToEmployeeResource();
     }
@@ -68,8 +57,9 @@ public class EmployeeDataService {
         checkDto(employeeDto);
         Employee employee = foundEntity.get().convertToEmployee();
 
-        employee.setLatitude(employeeDto.getLatitude());
-        employee.setLongitude(employeeDto.getLongitude());
+        LongitudeLatitude longitudeLatitude = locationIQDataService.getLongitudeLatitudeByAddress(employeeDto.getAddress());
+        employee.setLatitude(longitudeLatitude.getLatitude());
+        employee.setLongitude(longitudeLatitude.getLongitude());
         employee.setName(employeeDto.getName());
         employee.setPassword(employeeDto.getPassword());
 
@@ -87,23 +77,17 @@ public class EmployeeDataService {
     }
 
     private void checkDto(EmployeeDto employeeDto){
-        if(employeeDto.getName().equals("") || employeeDto.getName() == null)
+        if(isNullOrEmpty(employeeDto.getName()))
             throw new EmployeeMSBadRequestException("The param name is not valid");
-        if(employeeDto.getPassword().equals("") || employeeDto.getPassword() == null)
+        if(isNullOrEmpty(employeeDto.getPassword()))
             throw new EmployeeMSBadRequestException("The param password is not valid");
-        if(employeeDto.getLatitude().equals("") || employeeDto.getLatitude() == null)
-            throw new EmployeeMSBadRequestException("The param latitude is not valid");
-        if(employeeDto.getLongitude().equals("") || employeeDto.getLongitude() == null)
-            throw new EmployeeMSBadRequestException("The param longitude is not valid");
+        if(isNullOrEmpty(employeeDto.getAddress()))
+            throw new EmployeeMSBadRequestException("The param address is not valid");
         if(employeeDto.getName().length() <= 4)
             throw new EmployeeMSBadRequestException("The param name is not valid. Length must be > 4");
     }
 
-
-    public List<ServiceResource> getServicesOfEmployee(int employeeId) {
-        Optional<EmployeeEntity> foundEntity = employeeRepository.findById(employeeId);
-        if(!foundEntity.isPresent())
-            throw new EmployeeMSResourceNotFoundException(String.format("The employeeId with the id %d does not exist!", employeeId));
-        return serviceDataService.getServicesByEmployeeId(employeeId);
+    private boolean isNullOrEmpty(String string) {
+        return string == null || string.equals("");
     }
 }

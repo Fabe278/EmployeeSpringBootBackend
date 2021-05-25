@@ -23,6 +23,17 @@ public class EmployeeEntity {
 
     private String latitude;
 
+    public EmployeeEntity() {
+    }
+
+    public EmployeeEntity(Integer id, String name, String password, String longitude, String latitude) {
+        this.id = id;
+        this.name = name;
+        this.password = password;
+        this.longitude = longitude;
+        this.latitude = latitude;
+    }
+
     public Employee convertToEmployee(){
         Employee result = new Employee();
         result.setId(id);
