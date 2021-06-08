@@ -50,16 +50,16 @@ public class EmployeeDataService {
         return foundEmployee.get().convertToEmployee().convertToEmployeeResource();
     }
 
-    public EmployeeResource editEmployee(int employeeId, EmployeeWithLongLatDto employeeDto) {
+    public EmployeeResource editEmployee(int employeeId, EmployeeDto employeeDto) {
         Optional<EmployeeEntity> foundEntity = employeeRepository.findById(employeeId);
         if(!foundEntity.isPresent())
             throw new EmployeeMSResourceNotFoundException(String.format("The employeeId with the id %d does not exist!", employeeId));
 
-        checkLongLatDto(employeeDto);
+        checkDto(employeeDto);
         Employee employee = foundEntity.get().convertToEmployee();
-
-        employee.setLatitude(employeeDto.getLatitude());
-        employee.setLongitude(employeeDto.getLongitude());
+        LongitudeLatitude longitudeLatitude = locationIQDataService.getLongitudeLatitudeByAddress(employeeDto.getAddress());
+        employee.setLatitude(longitudeLatitude.getLatitude());
+        employee.setLongitude(longitudeLatitude.getLongitude());
         employee.setName(employeeDto.getName());
         employee.setPassword(employeeDto.getPassword());
 
@@ -83,19 +83,6 @@ public class EmployeeDataService {
             throw new EmployeeMSBadRequestException("The param password is not valid");
         if(isNullOrEmpty(employeeDto.getAddress()))
             throw new EmployeeMSBadRequestException("The param address is not valid");
-        if(employeeDto.getName().length() <= 4)
-            throw new EmployeeMSBadRequestException("The param name is not valid. Length must be > 4");
-    }
-
-    private void checkLongLatDto(EmployeeWithLongLatDto employeeDto){
-        if(isNullOrEmpty(employeeDto.getName()))
-            throw new EmployeeMSBadRequestException("The param name is not valid");
-        if(isNullOrEmpty(employeeDto.getPassword()))
-            throw new EmployeeMSBadRequestException("The param password is not valid");
-        if(isNullOrEmpty(employeeDto.getLatitude()))
-            throw new EmployeeMSBadRequestException("The param latitude is not valid");
-        if(isNullOrEmpty(employeeDto.getLongitude()))
-            throw new EmployeeMSBadRequestException("The param longitude is not valid");
         if(employeeDto.getName().length() <= 4)
             throw new EmployeeMSBadRequestException("The param name is not valid. Length must be > 4");
     }

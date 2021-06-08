@@ -2,7 +2,6 @@ package at.fhainzinger.controller;
 
 import at.fhainzinger.data.EmployeeDto;
 import at.fhainzinger.data.EmployeeResource;
-import at.fhainzinger.data.EmployeeWithLongLatDto;
 import at.fhainzinger.services.EmployeeDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,7 +35,7 @@ public class EmployeeRESTController {
 
 
     @RequestMapping(value ="/{employeeId}", method = RequestMethod.PUT)
-    public ResponseEntity<EmployeeResource> editEmployee(@PathVariable int employeeId, @RequestBody EmployeeWithLongLatDto employeeDto){
+    public ResponseEntity<EmployeeResource> editEmployee(@PathVariable int employeeId, @RequestBody EmployeeDto employeeDto){
         return new ResponseEntity<>(employeeDataService.editEmployee(employeeId, employeeDto), HttpStatus.OK);
     }
 
